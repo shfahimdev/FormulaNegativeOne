@@ -1,96 +1,54 @@
 #include <stdio.h>
+#include <time.h>
 #include <stdlib.h>
-#include <termios.h>
-#include <unistd.h>
-
-typedef struct {
-  float x;
-  float y;
-  float z;
-} Position ;
-
-void init_position(Position **obj, float x, float y, float z) {
-  *obj = malloc(sizeof(Position));
-
-  (*obj)->x = x;
-  (*obj)->y= y;
-  (*obj)->z = z;
-}
-
-void go_forward(Position *obj) {
-  obj->x += 1;
-}
-
-void go_backward(Position *obj) {
-  obj->x -= 1;
-}
-
-void go_left(Position *obj) {
-  obj->z -= 1;
-}
-
-void go_right(Position *obj) {
-  obj->z += 1;
-}
-
-void enable_raw_mode(struct termios *original) {
-    struct termios raw;
-
-    tcgetattr(STDIN_FILENO, original);
-    raw = *original;
-
-    raw.c_lflag &= ~(ICANON | ECHO);
-
-    tcsetattr(STDIN_FILENO, TCSAFLUSH, &raw);
-}
-
-void disable_raw_mode(struct termios *original) {
-    tcsetattr(STDIN_FILENO, TCSAFLUSH, original);
-}
-
+#include <linux/input.h>
+#include "keyhold.h"
+#include "object.h"
+#include "physics.h"
 
 int main() {
-  struct termios original_termios;
-  enable_raw_mode(&original_termios);
+  Object *ball = NULL;
+  init_object(&ball);
 
-  Position *obj = NULL;
-  init_position(&obj, 0, 0, 0);
+  keyhold_start();
+  float fps = 60;
+  float dt = 1.0f / fps;
+  float fx = 0;
+  float fy = 0;
+  float fz = 0;
+  float force_per_second = 17000.0f;
 
-  printf("[%f, %f, %f]\n", obj->x, obj->y, obj->z);
+  struct timespec ts = { 0, 16666667L }; // ~60fps
 
   while (1) {
+    KeyState s = keyhold_get();
+      if (s.held > 0 && s.key == 17) {
+        fx += force_per_second * dt;
+        printf("Current Fx = %.3f\n", fx);
+      } 
 
-    char ch = getchar();
-
-    if (ch == 'q') {
-      printf("Quitting");
-      disable_raw_mode(&original_termios);
-      free(obj);
-      obj = NULL;
-      return 0;
+      if (s.held > 0 && s.key == 31) {
+        fx -= force_per_second * dt;
+        printf("Current Fx = %.3f\n", fx);
+      }
+      if (s.held > 0 && s.key == 30) {
+        fz -= force_per_second * dt;
+        printf("Current Fz = %.3f\n", fz);
+      }
+      if (s.held > 0 && s.key == 32) {
+        fz += force_per_second * dt;
+        printf("Current Fz = %.3f\n", fz);
+      }
+      if (fx > 0 || fx < 0 || fz > 0 || fz < 0) {
+        ball->ax = 0;
+        ball->ay = 0;
+        ball->az = 0;
+        apply_force(ball, fx, fy, fz);
+        integrate(ball, dt);
+        printf("(x,y,z) = (%f, %f, %f)\n", ball->x, ball->y, ball->z);
+      } else {
+        printf("The car is stationary\n");
+      }
+      nanosleep(&ts, NULL);
     }
-
-    if (ch == 'w') {
-      go_forward(obj);
-      printf("[%f, %f, %f]\n", obj->x, obj->y, obj->z);
-    }
-
-    if (ch == 's') {
-      go_backward(obj);
-      printf("[%f, %f, %f]\n", obj->x, obj->y, obj->z);
-    }
-
-    if (ch == 'a') {
-      go_left(obj);
-      printf("[%f, %f, %f]\n", obj->x, obj->y, obj->z);
-    }
-
-    if (ch == 'd') {
-      go_right(obj);
-      printf("[%f, %f, %f]\n", obj->x, obj->y, obj->z);
-    }
-
-  }
-
-
 }
