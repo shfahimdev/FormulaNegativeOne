@@ -6,6 +6,7 @@ typedef struct {
   float vx, vy, vz;
   float ax, ay, az;
   float mass;
+  float friction_coefficient;
 } Object;
 
 void init_object(Object **ball);

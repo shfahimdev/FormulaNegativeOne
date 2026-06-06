@@ -1,54 +1,42 @@
 #include <stdio.h>
 #include <time.h>
 #include <stdlib.h>
+#include <math.h>
 #include <linux/input.h>
 #include "keyhold.h"
 #include "object.h"
 #include "physics.h"
 
 int main() {
-  Object *ball = NULL;
-  init_object(&ball);
-
+  Object *car = NULL;
+  init_object(&car);
+  
   keyhold_start();
-  float fps = 60;
-  float dt = 1.0f / fps;
-  float fx = 0;
-  float fy = 0;
-  float fz = 0;
-  float force_per_second = 17000.0f;
 
-  struct timespec ts = { 0, 16666667L }; // ~60fps
+  float fps          = 60;
+  float dt           = 1.0f / fps;
+  float gravity      = 9.8f;
+  float drive_force  = 170000.0f;
+
+  struct timespec ts = { 0, (long)(dt * 1e9f) }; // ~60fps
 
   while (1) {
-    KeyState s = keyhold_get();
-      if (s.held > 0 && s.key == 17) {
-        fx += force_per_second * dt;
-        printf("Current Fx = %.3f\n", fx);
-      } 
+    float fx = 0, fz = 0;
+    car->ax = 0; car->ay = 0; car->az = 0;
 
-      if (s.held > 0 && s.key == 31) {
-        fx -= force_per_second * dt;
-        printf("Current Fx = %.3f\n", fx);
-      }
-      if (s.held > 0 && s.key == 30) {
-        fz -= force_per_second * dt;
-        printf("Current Fz = %.3f\n", fz);
-      }
-      if (s.held > 0 && s.key == 32) {
-        fz += force_per_second * dt;
-        printf("Current Fz = %.3f\n", fz);
-      }
-      if (fx > 0 || fx < 0 || fz > 0 || fz < 0) {
-        ball->ax = 0;
-        ball->ay = 0;
-        ball->az = 0;
-        apply_force(ball, fx, fy, fz);
-        integrate(ball, dt);
-        printf("(x,y,z) = (%f, %f, %f)\n", ball->x, ball->y, ball->z);
-      } else {
-        printf("The car is stationary\n");
-      }
-      nanosleep(&ts, NULL);
-    }
+    KeyState s = keyhold_get();
+    if (s.held > 0 && s.key == 17) fx += drive_force;
+    if (s.held > 0 && s.key == 31) fx -= drive_force;
+    if (s.held > 0 && s.key == 30) fz -= drive_force;
+    if (s.held > 0 && s.key == 32) fz += drive_force;
+
+    apply_force(car, fx, 0, fz);
+    apply_friction(car, gravity, dt);
+    integrate(car, dt);
+
+    float speed = sqrtf(car->vx*car->vx + car->vz*car->vz);
+    printf("pos=(%.2f, %.2f)  speed=%.3f m/s\n", car->x, car->z, speed);
+
+    nanosleep(&ts, NULL);
+  }
 }

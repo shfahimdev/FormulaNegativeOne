@@ -1,16 +1,11 @@
 #include <stdlib.h>
 #include "object.h"
 
-void init_object(Object **ball) {
-  *ball = malloc(sizeof(Object));
-  (*ball)->x = 0;
-  (*ball)->y = 0;
-  (*ball)->z = 0;
-  (*ball)->vx = 0;
-  (*ball)->vy = 0;
-  (*ball)->vz = 0;
-  (*ball)->ax = 0;
-  (*ball)->ay = 0;
-  (*ball)->az = 0;
-  (*ball)->mass = 775;
+void init_object(Object **obj) {
+  *obj = malloc(sizeof(Object));
+  (*obj)->x = 0 ; (*obj)->y = 0 ; (*obj)->z = 0;
+  (*obj)->vx = 0; (*obj)->vy = 0; (*obj)->vz = 0;
+  (*obj)->ax = 0; (*obj)->ay = 0; (*obj)->az = 0;
+  (*obj)->mass = 775.0f;
+  (*obj)->friction_coefficient = 0.6f;
 }
