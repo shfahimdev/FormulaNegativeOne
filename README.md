@@ -1,6 +1,6 @@
 # FormulaNegativeOne
 
-A from-scratch Formula 1 physics simulator written in C. No game engine... just raw physics, real math, and a long road ahead.
+A from-scratch Formula 1 simulator written in C. No game engine... just raw physics, real math, and a long road ahead.
 
 ## What it does
 
