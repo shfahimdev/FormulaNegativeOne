@@ -1,7 +1,7 @@
 # Makefile
 CC     = gcc
 CFLAGS = -Wall -Wextra -g
-LIBS   = -lm -lpthread
+LIBS   = -lraylib -lm -lpthread
 
 TARGET = formulanegativeone
 SRC    = $(wildcard *.c)
